@@ -1,6 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 import React from 'react';
 import CustomHeader from './CustomHeader';
+import colors from '../constants/constants';
 
 const CustomContainer = ({ 
   navigation, 
@@ -26,6 +27,7 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     padding: 16,
+    backgroundColor: colors.white
   },
 });
 

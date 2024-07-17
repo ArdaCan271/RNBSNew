@@ -5,6 +5,8 @@ import CustomContainer from '../components/CustomContainer';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import colors from '../constants/constants';
+
 const HomeScreen = ({ navigation }) => {
 
   const handlePermissionAndNavigation = async () => {
@@ -33,12 +35,10 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <CustomContainer navigation={navigation} headerTitle={'Home'} contentStyle={styles.contentContainer}>
-      <MaterialCommunityIcons name="qrcode-scan" size={150} color="#ccded6" />
-      <MaterialCommunityIcons name="barcode-scan" size={150} color="#ccded6" />
       <View style={styles.goToScanButtonWrapper}>
         <Pressable
           style={styles.goToScanButton}
-          android_ripple={{ color: "#98D7C2" }}
+          android_ripple={{ color: colors.primaryDark, radius: 85 }}
           onPress={handlePermissionAndNavigation}
         >
           <Ionicons name="barcode-outline" size={24} color="#fff" />
@@ -52,7 +52,6 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   contentContainer: {
     justifyContent: "flex-start",
-    paddingTop: 50,
     rowGap: 15,
     alignItems: "center",
   },
@@ -68,7 +67,7 @@ const styles = StyleSheet.create({
   goToScanButton: {
     width: "100%",
     height: 50,
-    backgroundColor: "#29A0B1",
+    backgroundColor: colors.primary,
     flexDirection: "row",
     justifyContent: "space-evenly",
     alignItems: "center",
@@ -77,7 +76,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 20,
-    color: "#fff",
+    color: colors.white,
   }
 });
 

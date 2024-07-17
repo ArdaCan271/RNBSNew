@@ -7,18 +7,14 @@ import Icon from 'react-native-vector-icons/AntDesign';
 import HomeScreen from './src/screens/HomeScreen';
 import ScanScreen from './src/screens/ScanScreen';
 import DetailScreen from './src/screens/DetailScreen';
+import PermissionScreen from './src/screens/PermissionScreen';
 
 const Stack = createNativeStackNavigator();
 
 const App = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName='Home'>
-        <Stack.Screen 
-          name='Home'
-          component={HomeScreen}
-          options={{headerShown: false}}
-        />
+      <Stack.Navigator initialRouteName='Scan'>
         <Stack.Screen 
           name='Scan'
           component={ScanScreen}
@@ -27,6 +23,11 @@ const App = () => {
         <Stack.Screen 
           name='Detail'
           component={DetailScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen 
+          name='Permission'
+          component={PermissionScreen}
           options={{headerShown: false}}
         />
       </Stack.Navigator>

@@ -1,6 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, StatusBar } from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+
+import colors from '../constants/constants';
 
 const CustomHeader = ({ navigation, title }) => {
   const canGoBack = navigation.canGoBack();
@@ -9,7 +11,7 @@ const CustomHeader = ({ navigation, title }) => {
     <View style={styles.headerContainer}>
       {canGoBack && (
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <AntDesign name="caretleft" size={24} color="#167D7F" />
+          <AntDesign name="caretleft" size={24} color={colors.white} />
         </TouchableOpacity>
       )}
       <Text style={styles.headerTitle}>{title}</Text>
@@ -24,13 +26,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 10,
     paddingHorizontal: 15,
-    backgroundColor: '#DDFFE7',
+    backgroundColor: colors.primaryDark,
     borderBottomWidth: 1,
-    borderBottomColor: '#98D7C2',
+    borderBottomColor: colors.primary,
     width: "100%",
     position: "absolute",
-    top: 0,
+    top: Platform.OS === "android" ? StatusBar.currentHeight : 0,
     left: 0,
+    zIndex: 10,
   },
   backButton: {
     position: "absolute",
@@ -39,7 +42,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: "#167D7F"
+    color: colors.white
   },
 });
 
