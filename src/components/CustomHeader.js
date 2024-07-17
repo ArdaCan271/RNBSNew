@@ -27,7 +27,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#DDFFE7',
     borderBottomWidth: 1,
     borderBottomColor: '#98D7C2',
-    width: "100%"
+    width: "100%",
+    position: "absolute",
+    top: 0,
+    left: 0,
   },
   backButton: {
     position: "absolute",

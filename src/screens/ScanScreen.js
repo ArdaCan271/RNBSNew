@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Dimensions } from 'react-native';
 import { Camera, useCameraDevice, useCodeScanner, useFrameProcessor, useCameraDevices, useCameraFormat, useSkiaFrameProcessor, runAsync, runAtTargetFps } from 'react-native-vision-camera';
 import { useResizePlugin } from 'vision-camera-resize-plugin';
 import { crop } from 'vision-camera-cropper';
@@ -24,6 +24,10 @@ const ScanScreen = ({ navigation }) => {
   const devices = useCameraDevices();
   const device = devices.find(({ position }) => position === "back");
 
+  const deviceWidth = Dimensions.get('window').width;
+  const deviceHeight = Dimensions.get('window').height;
+
+
   if (!device) {
     return null;
   }
@@ -40,19 +44,22 @@ const ScanScreen = ({ navigation }) => {
     // coordinates in percentage
     if (isScanning) {
       runAtTargetFps(1, () => { const cropRegion = {
-        left: 25,
-        top: 30,
-        width: 50,
-        height: 15
-      }
+        // left: 25,
+        // top: 30,
+        // width: 50,
+        // height: 15
+        left: 0,
+        top: 0,
+        width: 100,
+        height: 100
+      };
+      
       const result = crop(frame, { cropRegion: cropRegion, includeImageBase64: true, saveAsFile: false });
-      const smallFrameBase64 = result.base64;
-      const data = scanBarcodes(frame, {smallFrame: smallFrameBase64});
-      console.log(data, 'data')
+      console.log(result);
      });
     }
 
-  }, [isScanning]);
+  }, [isScanning, deviceHeight, deviceWidth]);
 
   // useEffect(() => {
   //   let timer;
@@ -116,6 +123,12 @@ const ScanScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  camera: {
+    height: "100%",
+    aspectRatio: 3/4,
   },
   scanButton: {
     position: "absolute",
