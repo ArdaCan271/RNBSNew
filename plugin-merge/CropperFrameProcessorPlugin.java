@@ -59,6 +59,9 @@ public class CropperFrameProcessorPlugin extends FrameProcessorPlugin {
           String barcodeFormatStr = (String) arguments.get("barcodeFormat");
 
           switch (barcodeFormatStr) {
+              case "all-formats":
+                  barcodeFormat = Barcode.FORMAT_ALL_FORMATS;
+                  break;
               case "code-128":
                   barcodeFormat = Barcode.FORMAT_CODE_128;
                   break;

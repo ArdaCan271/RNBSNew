@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Dimensions, BackHandler, PermissionsAndroid } from 'react-native';
-import { Camera, useCodeScanner, useFrameProcessor, useCameraDevices, runAtTargetFps } from 'react-native-vision-camera';
+import { Camera, useFrameProcessor, useCameraDevices, runAtTargetFps } from 'react-native-vision-camera';
 import { crop } from 'vision-camera-cropper';
 
 import { Worklets } from 'react-native-worklets-core';
@@ -8,9 +8,15 @@ import { Worklets } from 'react-native-worklets-core';
 import { useIsFocused } from '@react-navigation/native';
 import { useAppState } from '@react-native-community/hooks';
 
-import CustomHeader from '../components/CustomHeader';
+import { useSelector, useDispatch } from 'react-redux';
+
 import Ionicons from 'react-native-vector-icons/Ionicons';
+
 import colors from '../constants/constants';
+
+import FormatPickerModal from '../components/FormatPickerModal';
+
+const getRegionOfInterest = (state) => state.regionOfInterest;
 
 
 const ScanScreen = ({ navigation }) => {
@@ -75,12 +81,8 @@ const ScanScreen = ({ navigation }) => {
   const [isScanning, setIsScanning] = useState(false);
   const [flashEnabled, setFlashEnabled] = useState(false);
 
-  const [roi, setRoi] = useState({
-    left: 10,
-    width: 80,
-    top: 20,
-    height: 30,
-  });
+  const roi = useSelector(getRegionOfInterest);
+  const dispatch = useDispatch();
 
   const setIsScanningJS = Worklets.createRunOnJS(setIsScanning);
 
@@ -92,19 +94,19 @@ const ScanScreen = ({ navigation }) => {
     'worklet';
     // coordinates in percentage
     if (isScanning) {
-      const pxLeft = ((frame.width - deviceWidth) / 2) + (deviceWidth * (roi.left * 0.01));
+      const pxLeft = ((frame.width - deviceWidth) / 2) + (deviceWidth * (roi.region.left * 0.01));
       const percLeft = (pxLeft / frame.width) * 100;
 
-      const calcWidth = (deviceWidth / frame.width) * roi.width;
+      const calcWidth = (deviceWidth / frame.width) * roi.region.width;
 
         runAtTargetFps(5, () => {
          const cropRegion = {
           left: percLeft,
-          top: roi.top,
+          top: roi.region.top,
           width: calcWidth,
-          height: roi.height
+          height: roi.region.height
         };
-        const result = crop(frame, { cropRegion: cropRegion, includeImageBase64: true, saveAsFile: false, barcodeFormat: 'ean-13' });
+        const result = crop(frame, { cropRegion: cropRegion, includeImageBase64: true, saveAsFile: false, barcodeFormat: roi.format });
         if (result.length > 0) {
             console.log(result[0].rawValue);
             setIsScanningJS(false);
@@ -115,27 +117,15 @@ const ScanScreen = ({ navigation }) => {
     }
   }, [isScanning, deviceHeight, deviceWidth, roi]);
 
-  // useEffect(() => {
-  //   let timer;
-  //   if (isScanning) {
-  //     timer = setTimeout(() => {
-  //       setIsScanning(false);
-  //     }, 4000);
-  //   }
-  //   return () => clearTimeout(timer);
-  // }, [isScanning]);
-
-  // const codeScanner = useCodeScanner({
-  //   codeTypes: ['ean-8', "qr", 'ean-13'],
-  //   onCodeScanned: (codes) => {
-  //     console.log(codes[0].value);
-  //     if (isScanning) {
-  //       setIsScanning(false);
-  //       setFlashEnabled(false);
-  //       navigation.navigate('Detail', { codeInfo: codes[0].value });
-  //     }
-  //   }
-  // });
+  useEffect(() => {
+    let timer;
+    if (isScanning) {
+      timer = setTimeout(() => {
+        setIsScanning(false);
+      }, 2500);
+    }
+    return () => clearTimeout(timer);
+  }, [isScanning]);
 
   const onScanPress = () => {
     setIsScanning(prevState => !prevState);
@@ -145,13 +135,27 @@ const ScanScreen = ({ navigation }) => {
     setFlashEnabled(prevState => !prevState);
   };
 
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const onSelectFormatPress = () => {
+    if(!isScanning) {
+      setModalVisible(true);
+    }
+  }
+
+  const styles = getDynamicStyles(roi);
+  console.log(roi);
+
+  onModalOutsidePress = () => {
+    setModalVisible(false);
+  }
+
   return (
     <View style={styles.container}>
       {cameraPermission === PermissionsAndroid.RESULTS.GRANTED ? <Camera
         style={StyleSheet.absoluteFill}
         device={device}
         isActive={isActive}
-        // codeScanner={codeScanner}
         frameProcessor={frameProcessor}
         torch={flashEnabled ? 'on' : 'off'}
       /> : null}
@@ -173,11 +177,23 @@ const ScanScreen = ({ navigation }) => {
           color="white"
         />
       </TouchableOpacity>
+      <TouchableOpacity style={styles.selectFormatButton} onPress={onSelectFormatPress}>
+        <Ionicons
+          name={'options'}
+          size={30}
+          color="white"
+        />
+      </TouchableOpacity>
+      {modalVisible &&
+        <FormatPickerModal
+          onOutsidePress={onModalOutsidePress}
+        />
+      }
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const getDynamicStyles = (roi) => StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
@@ -189,7 +205,7 @@ const styles = StyleSheet.create({
   },
   scanButton: {
     position: "absolute",
-    bottom: "15%",
+    bottom: "30%",
     alignSelf: "center",
     width: 85,
     height: 85,
@@ -201,7 +217,7 @@ const styles = StyleSheet.create({
   },
   scanButtonScanning: {
     position: "absolute",
-    bottom: "15%",
+    bottom: "30%",
     alignSelf: "center",
     width: 85,
     height: 85,
@@ -235,7 +251,7 @@ const styles = StyleSheet.create({
   },
   scanningText: {
     position: 'absolute',
-    top: '12%',
+    top: `${50}%`,
     alignSelf: 'center',
     fontSize: 18,
     color: colors.white,
@@ -255,21 +271,33 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     padding: 5,
   },
+  selectFormatButton: {
+    position: 'absolute',
+    bottom: '7%',
+    left: '5%',
+    width: 50,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    borderRadius: 25,
+    padding: 5,
+  },
   highlightMiddle: {
     position: 'absolute',
-    top: '20%',
-    left: '10%',
-    width: '80%',
-    height: '30%',
+    top: `${roi.region.top}%`,
+    left: `${roi.region.left}%`,
+    width: `${roi.region.width}%`,
+    height: `${roi.region.height}%`,
     borderColor: colors.white,
     borderWidth: 2,
   },
   highlightMiddleScanning: {
     position: 'absolute',
-    top: '20%',
-    left: '10%',
-    width: '80%',
-    height: '30%',
+    top: `${roi.region.top}%`,
+    left: `${roi.region.left}%`,
+    width: `${roi.region.width}%`,
+    height: `${roi.region.height}%`,
     borderColor: colors.primary,
     borderWidth: 2,
   },
@@ -278,7 +306,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     width: '100%',
-    height: '20%',
+    height: `${roi.region.top}%`,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   darkenTopScanning: {
@@ -286,39 +314,39 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     width: '100%',
-    height: '20%',
+    height: `${roi.region.top}%`,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
   },
   darkenMiddleLeft: {
     position: 'absolute',
-    top: '20%',
+    top: `${roi.region.top}%`,
     left: 0,
-    width: '10%',
-    height: '30%',
+    width: `${roi.region.left}%`,
+    height: `${roi.region.height}%`,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   darkenMiddleLeftScanning: {
     position: 'absolute',
-    top: '20%',
+    top: `${roi.region.top}%`,
     left: 0,
-    width: '10%',
-    height: '30%',
+    width: `${roi.region.left}%`,
+    height: `${roi.region.height}%`,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
   },
   darkenMiddleRight: {
     position: 'absolute',
-    top: '20%',
+    top: `${roi.region.top}%`,
     right: 0,
-    width: '10%',
-    height: '30%',
+    width: `${roi.region.left}%`,
+    height: `${roi.region.height}%`,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   darkenMiddleRightScanning: {
     position: 'absolute',
-    top: '20%',
+    top: `${roi.region.top}%`,
     right: 0,
-    width: '10%',
-    height: '30%',
+    width: `${roi.region.left}%`,
+    height: `${roi.region.height}%`,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
   },
   darkenBottom: {
@@ -326,7 +354,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     width: '100%',
-    height: '50%',
+    height: `${100 - (roi.region.height + roi.region.top)}%`,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   darkenBottomScanning: {
@@ -334,7 +362,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     width: '100%',
-    height: '50%',
+    height: `${100 - (roi.region.height + roi.region.top)}%`,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
   },
 });
