@@ -75,7 +75,12 @@ const ScanScreen = ({ navigation }) => {
   const [isScanning, setIsScanning] = useState(false);
   const [flashEnabled, setFlashEnabled] = useState(false);
 
-  const [data, setData] = useState('');
+  const [roi, setRoi] = useState({
+    left: 10,
+    width: 80,
+    top: 20,
+    height: 30,
+  });
 
   const setIsScanningJS = Worklets.createRunOnJS(setIsScanning);
 
@@ -87,31 +92,28 @@ const ScanScreen = ({ navigation }) => {
     'worklet';
     // coordinates in percentage
     if (isScanning) {
-      const pxLeft = ((frame.width - deviceWidth) / 2) + (deviceWidth * 0.1);
+      const pxLeft = ((frame.width - deviceWidth) / 2) + (deviceWidth * (roi.left * 0.01));
       const percLeft = (pxLeft / frame.width) * 100;
 
-      const calcWidth = (deviceWidth / frame.width) * 80;
+      const calcWidth = (deviceWidth / frame.width) * roi.width;
 
-      runAtTargetFps(5, () => { const cropRegion = {
-        // left: 25,
-        // top: 30,
-        // width: 50,
-        // height: 15
-        left: percLeft,
-        top: 20,
-        width: calcWidth,
-        height: 30
-      };
-      const result = crop(frame, { cropRegion: cropRegion, includeImageBase64: true, saveAsFile: false });
-      if (result.length > 0) {
-        console.log(result[0].rawValue);
-        setIsScanningJS(false);
-        setFlashEnabledJS(false);
-        navigateJS('Detail', { codeInfo: result[0].rawValue });
-      }
-     });
+        runAtTargetFps(5, () => {
+         const cropRegion = {
+          left: percLeft,
+          top: roi.top,
+          width: calcWidth,
+          height: roi.height
+        };
+        const result = crop(frame, { cropRegion: cropRegion, includeImageBase64: true, saveAsFile: false, barcodeFormat: 'ean-13' });
+        if (result.length > 0) {
+            console.log(result[0].rawValue);
+            setIsScanningJS(false);
+            setFlashEnabledJS(false);
+            navigateJS('Detail', { codeInfo: result[0].rawValue });
+        }
+      });
     }
-  }, [isScanning, deviceHeight, deviceWidth]);
+  }, [isScanning, deviceHeight, deviceWidth, roi]);
 
   // useEffect(() => {
   //   let timer;

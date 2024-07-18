@@ -1,7 +1,21 @@
-import { StyleSheet, Text, View, PermissionsAndroid, TouchableOpacity, Button } from 'react-native';
+import { StyleSheet, Text, View, PermissionsAndroid, TouchableOpacity, Button, BackHandler } from 'react-native';
 import React, { useEffect } from 'react';
 
 const PermissionScreen = ({ navigation }) => {
+
+  useEffect(() => {
+    const backAction = () => {
+      BackHandler.exitApp();
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
+
+    return () => backHandler.remove();
+  }, []);
 
   const handlePermissionAndNavigation = async () => {
     try {
